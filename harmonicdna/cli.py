@@ -1,4 +1,4 @@
-"""HarmonicDNA CLI — compare two songs by their chord fingerprints."""
+"""HarmonicDNA CLI - compare two songs by their chord fingerprints."""
 
 from __future__ import annotations
 
@@ -49,7 +49,7 @@ def compare_cmd(
         console.print("[red]Could not extract chord sequences from one or both files.[/red]")
         raise typer.Exit(1)
 
-    console.print("\n[bold]Aligning…[/bold]")
+    console.print("\n[bold]Aligning...[/bold]")
     result      = align(seq_a, seq_b)
     longer_seq  = seq_a if len(seq_a) >= len(seq_b) else seq_b
     max_score   = self_align_score(longer_seq)

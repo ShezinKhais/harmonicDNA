@@ -1,4 +1,4 @@
-"""HarmonicDNA — chord fingerprinting and musical similarity via Smith-Waterman."""
+"""HarmonicDNA - chord fingerprinting and musical similarity via Smith-Waterman."""
 
 from harmonicdna.chord_detector import detect_chords, ChordLabel
 from harmonicdna.chromagram import compute_chromagram

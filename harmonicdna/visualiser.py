@@ -69,7 +69,7 @@ def render_html_comparison(
 <html><head><meta charset="UTF-8"><title>HarmonicDNA Comparison</title>
 <style>body{{background:#111;color:#eee;font-family:monospace;padding:2rem}}
 pre{{background:#1a1a1a;padding:1rem;border-radius:8px}}</style></head><body>
-<h1>HarmonicDNA — Chord Alignment</h1>
+<h1>HarmonicDNA - Chord Alignment</h1>
 <h2>{name_a}</h2><p>{_seq_html(seq_a)}</p>
 <h2>{name_b}</h2><p>{_seq_html(seq_b)}</p>
 <h2>Alignment</h2><pre>{alignment_to_text(result)}</pre>
