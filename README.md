@@ -32,14 +32,25 @@ python -m harmonicdna.cli chords song_a.mp3
 
 ## Scoring matrix
 
-| Relationship | Score |
-|---|---|
-| Same chord | +2.0 |
-| Parallel major/minor (same root) | +1.0 |
-| Relative major/minor | +0.5 |
-| Subdominant or dominant | +0.3 |
-| Unrelated | -1.0 |
-| Gap penalty | -0.5 |
+Chord labels are not treated as symbols to be matched literally. Two chords can
+look unrelated as strings and be closely related in function, so the aligner
+scores each pair by harmonic relationship instead of equality.
+
+| Relationship | Example | Score |
+|---|---|---|
+| Same chord | Cmaj / Cmaj | +2.0 |
+| Parallel major/minor (same root) | Cmaj / Cmin | +1.0 |
+| Relative major/minor | Cmaj / Amin | +0.5 |
+| Subdominant or dominant | Cmaj / Fmaj, Cmaj / Gmaj | +0.3 |
+| Unrelated | Cmaj / F#min | -1.0 |
+| Gap penalty | | -0.5 |
+
+The fifth relationship requires both chords to share a quality, so Cmaj scores
+against Gmaj but not against Gmin. One consequence worth knowing: two sequences
+with no chord in common can still align, because relatedness alone is enough to
+carry a local alignment. `identity` reports how much of that alignment was exact
+matching, so a high score with a low identity means the passages are harmonically
+parallel rather than the same.
 
 ---
 

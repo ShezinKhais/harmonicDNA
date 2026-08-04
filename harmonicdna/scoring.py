@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from harmonicdna.aligner import AlignmentResult
+from harmonicdna.aligner import AlignmentResult, SAME
 
 
 @dataclass
@@ -43,7 +43,8 @@ def similarity_score(result: AlignmentResult,
     )
 
 
-def self_align_score(seq: list[str], match: float = 2.0) -> float:
+def self_align_score(seq: list[str], match: float = SAME) -> float:
     """Compute the perfect score when aligning a sequence against itself."""
-    # best case: every position matches
+    # best case: every position matches, and SAME is the highest score the
+    # substitution table can award, so this really is the ceiling
     return len(seq) * match
