@@ -77,6 +77,32 @@ class AlignmentResult:
     identity: float   # fraction of aligned positions that match
 
 
+def _score_lookup(seq_a: list[str], seq_b: list[str], score_fn):
+    """Return (table, rows, cols) giving the score for any position pair.
+
+    The score for seq_a[i] against seq_b[j] is table[rows[i], cols[j]].
+
+    A song reduces to at most the 24 triads plus whatever unparseable markers
+    the detector emitted, so the number of distinct label pairs is tiny next to
+    the number of cell pairs. Scoring each distinct pair once turns a per-cell
+    call that reparses two chord names into a lookup. The table stays at
+    vocabulary size rather than being expanded to one entry per cell, which
+    would cost as much memory again as the scoring matrix itself.
+    """
+    index_a = {label: i for i, label in enumerate(dict.fromkeys(seq_a))}
+    index_b = {label: j for j, label in enumerate(dict.fromkeys(seq_b))}
+
+    table = np.empty((len(index_a), len(index_b)))
+    for label_a, i in index_a.items():
+        for label_b, j in index_b.items():
+            table[i, j] = score_fn(label_a, label_b)
+
+    rows = [index_a[label] for label in seq_a]
+    cols = np.fromiter((index_b[label] for label in seq_b),
+                       dtype=np.intp, count=len(seq_b))
+    return table, rows, cols
+
+
 def align(
     seq_a: list[str],
     seq_b: list[str],
@@ -86,17 +112,33 @@ def align(
     """Smith-Waterman local alignment of two chord sequences."""
     n, m = len(seq_a), len(seq_b)
     H    = np.zeros((n + 1, m + 1))
+    if n and m:
+        table, rows, cols = _score_lookup(seq_a, seq_b, score_fn)
 
-    # fill scoring matrix
-    for i in range(1, n + 1):
-        for j in range(1, m + 1):
-            s = score_fn(seq_a[i - 1], seq_b[j - 1])
-            H[i, j] = max(
-                0,
-                H[i - 1, j - 1] + s,
-                H[i - 1, j]     + gap,
-                H[i,     j - 1] + gap,
-            )
+        # The recurrence is serial in both axes, so the fill stays a loop. It
+        # runs over Python lists rather than indexing H cell by cell: element
+        # access on a numpy array costs far more than plain float arithmetic,
+        # and this loop runs len(a) * len(b) times. The arithmetic is identical,
+        # so the matrix and the traceback below are unchanged.
+        prev = [0.0] * (m + 1)
+        for i in range(1, n + 1):
+            scores = table[rows[i - 1]].take(cols).tolist()
+            cur    = [0.0] * (m + 1)
+            left   = 0.0
+            for j in range(1, m + 1):
+                best = prev[j - 1] + scores[j - 1]
+                up   = prev[j] + gap
+                if up > best:
+                    best = up
+                lf = left + gap
+                if lf > best:
+                    best = lf
+                if best < 0.0:
+                    best = 0.0
+                cur[j] = best
+                left   = best
+            H[i] = cur
+            prev = cur
 
     # find best score position
     best_score = float(H.max())
