@@ -38,10 +38,17 @@ jobs:
       # a particular path runs. Detecting chords on a generated tone exercises
       # the decode, chroma and template-matching stages that the spec collects
       # for, rather than only proving the process starts.
+      #
+      # Start-Process -Wait, not `./the.exe`. This is a windowed-subsystem
+      # binary, and PowerShell hands control straight back for one of those
+      # rather than waiting, so a plain invocation would report success before
+      # the analysis had run at all.
       - name: Check the executable runs
         run: |
           python -c "import numpy as np, scipy.io.wavfile as w; sr=22050; t=np.linspace(0,3,sr*3,False); s=sum(np.sin(2*np.pi*f*t) for f in (261.63,329.63,392.0))/3; w.write('probe.wav', sr, (s*0.3*32767).astype(np.int16))"
-          ./dist/HarmonicDNA/HarmonicDNA.exe chords probe.wav
+          $p = Start-Process -FilePath ./dist/HarmonicDNA/HarmonicDNA.exe `
+                 -ArgumentList "chords","probe.wav" -NoNewWindow -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw "the executable exited $($p.ExitCode)" }
 
       # A one-folder build cannot be attached to a release as-is, so it goes up
       # as a single zip.
