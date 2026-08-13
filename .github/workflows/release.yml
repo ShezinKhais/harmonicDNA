@@ -1,0 +1,60 @@
+name: release
+
+# Builds the Windows executable and attaches it to the release, so the binary
+# on GitHub is always produced from the tagged source rather than from whatever
+# happened to be on a laptop.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows-exe:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install
+        run: |
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Test before packaging
+        run: pytest -q
+
+      - name: Build
+        working-directory: packaging
+        run: pyinstaller harmonicdna.spec --noconfirm --distpath ../dist --workpath ../build
+
+      # librosa resolves submodules lazily, so a missing one shows up only when
+      # a particular path runs. Detecting chords on a generated tone exercises
+      # the decode, chroma and template-matching stages that the spec collects
+      # for, rather than only proving the process starts.
+      - name: Check the executable runs
+        run: |
+          python -c "import numpy as np, scipy.io.wavfile as w; sr=22050; t=np.linspace(0,3,sr*3,False); s=sum(np.sin(2*np.pi*f*t) for f in (261.63,329.63,392.0))/3; w.write('probe.wav', sr, (s*0.3*32767).astype(np.int16))"
+          ./dist/HarmonicDNA/HarmonicDNA.exe chords probe.wav
+
+      # A one-folder build cannot be attached to a release as-is, so it goes up
+      # as a single zip.
+      - name: Package
+        run: Compress-Archive -Path dist/HarmonicDNA -DestinationPath dist/HarmonicDNA-windows.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: HarmonicDNA-windows
+          path: dist/HarmonicDNA-windows.zip
+
+      - name: Attach to the release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/HarmonicDNA-windows.zip

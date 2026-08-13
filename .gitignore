@@ -8,3 +8,8 @@ output/
 *.html
 .env
 *.env
+
+# PyInstaller output
+build/
+dist/
+probe.wav
