@@ -70,6 +70,20 @@ def compare_cmd(
         console.print(f"HTML saved -> {html_out}")
 
 
+@app.command("gui")
+def gui_cmd():
+    """Open the desktop window: pick tracks, align them, read the result."""
+    # Imported here rather than at module scope: tkinter is absent from some
+    # Linux python builds, and the rest of the CLI must work without it.
+    try:
+        from harmonicdna.gui import run
+    except ImportError as e:
+        console.print(f"[red]The window needs tkinter, which this Python was "
+                      f"built without ({e}).[/red]")
+        raise typer.Exit(2)
+    raise typer.Exit(run())
+
+
 @app.command("chords")
 def chords_cmd(
     file: Path = typer.Argument(..., help="Audio file to analyse"),
