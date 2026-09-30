@@ -105,6 +105,7 @@ harmonicdna/
 │   ├── scoring.py          # 24x24 chord similarity matrix
 │   ├── aligner.py          # Smith-Waterman DP + traceback
 │   ├── visualiser.py       # two-track HTML alignment report
+│   ├── gui.py              # desktop window
 │   └── cli.py
 └── tests/
     ├── test_aligner.py
