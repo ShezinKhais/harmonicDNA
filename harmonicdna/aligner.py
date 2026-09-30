@@ -37,34 +37,58 @@ def parse_chord(label: str) -> tuple[int, str] | None:
     return None
 
 
-def chord_similarity(a: str, b: str) -> float:
+def chord_relationship(a: str, b: str) -> str:
     """
-    Score one chord against another by harmonic relationship.
+    Name the harmonic relationship between two chords.
 
-    Anything unparseable (a "no chord" marker, say) only ever scores as
-    identical or unrelated, since there is no root to reason about.
+    The name reads from a to b, so "dominant" means b is the dominant of a.
+    Anything unparseable (a "no chord" marker, say) is only ever identical or
+    unrelated, since there is no root to reason about.
     """
     if a == b:
-        return SAME
+        return "identical"
 
     pa, pb = parse_chord(a), parse_chord(b)
     if pa is None or pb is None:
-        return UNRELATED
+        return "unrelated"
 
     root_a, qual_a = pa
     root_b, qual_b = pb
 
     # same root, opposite quality: C major against C minor
     if root_a == root_b:
-        return PARALLEL
+        return "parallel"
 
     if qual_a != qual_b:
         # relative major/minor: the minor sits 9 semitones above its major
         major, minor = ((root_a, root_b) if qual_a == "maj" else (root_b, root_a))
-        return RELATIVE if (major + 9) % 12 == minor else UNRELATED
+        return "relative" if (major + 9) % 12 == minor else "unrelated"
 
     # same quality, a fifth apart in either direction
-    return FIFTH if (root_b - root_a) % 12 in (5, 7) else UNRELATED
+    interval = (root_b - root_a) % 12
+    if interval == 7:
+        return "dominant"
+    if interval == 5:
+        return "subdominant"
+    return "unrelated"
+
+
+# The score is the relationship's price. Naming the relationship and scoring it
+# are the same judgement, so they read off one table rather than two copies of
+# the interval arithmetic that could drift apart.
+_RELATIONSHIP_SCORES = {
+    "identical":   SAME,
+    "parallel":    PARALLEL,
+    "relative":    RELATIVE,
+    "dominant":    FIFTH,
+    "subdominant": FIFTH,
+    "unrelated":   UNRELATED,
+}
+
+
+def chord_similarity(a: str, b: str) -> float:
+    """Score one chord against another by harmonic relationship."""
+    return _RELATIONSHIP_SCORES[chord_relationship(a, b)]
 
 
 @dataclass

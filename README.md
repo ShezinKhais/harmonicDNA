@@ -77,12 +77,13 @@ harmonicdna/
 │   ├── chord_detector.py   # template matching, smoothing, deduplication
 │   ├── scoring.py          # 24x24 chord similarity matrix
 │   ├── aligner.py          # Smith-Waterman DP + traceback
-│   ├── visualiser.py       # HTML alignment table
+│   ├── visualiser.py       # two-track HTML alignment report
 │   └── cli.py
 └── tests/
     ├── test_aligner.py
     ├── test_scoring.py
-    └── test_chord_detector.py
+    ├── test_chord_detector.py
+    └── test_visualiser.py
 ```
 
 ---

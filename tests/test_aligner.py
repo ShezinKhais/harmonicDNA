@@ -6,7 +6,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import pytest
 from harmonicdna.aligner import (
-    align, AlignmentResult, chord_similarity, parse_chord,
+    align, AlignmentResult, chord_relationship, chord_similarity, parse_chord,
     SAME, PARALLEL, RELATIVE, FIFTH, UNRELATED,
 )
 
@@ -64,6 +64,37 @@ class TestChordSimilarity:
         for a in chords:
             for b in chords:
                 assert chord_similarity(a, b) == chord_similarity(b, a)
+
+
+class TestChordRelationship:
+    """The name behind the score: the report shows it, so it has to be right."""
+
+    def test_identical(self):
+        assert chord_relationship("Cmaj", "Cmaj") == "identical"
+
+    def test_parallel(self):
+        assert chord_relationship("Cmaj", "Cmin") == "parallel"
+
+    def test_relative(self):
+        assert chord_relationship("Cmaj", "Amin") == "relative"
+
+    def test_fifths_name_their_direction(self):
+        # the name reads from the first chord to the second
+        assert chord_relationship("Cmaj", "Gmaj") == "dominant"
+        assert chord_relationship("Cmaj", "Fmaj") == "subdominant"
+
+    def test_unrelated(self):
+        assert chord_relationship("Cmaj", "F#min") == "unrelated"
+
+    def test_every_relationship_carries_its_score(self):
+        chords = ["Cmaj", "Cmin", "Amin", "Gmaj", "Fmaj", "F#min", "D#maj", "N"]
+        expected = {
+            "identical": SAME, "parallel": PARALLEL, "relative": RELATIVE,
+            "dominant": FIFTH, "subdominant": FIFTH, "unrelated": UNRELATED,
+        }
+        for a in chords:
+            for b in chords:
+                assert chord_similarity(a, b) == expected[chord_relationship(a, b)]
 
 
 class TestAlign:
